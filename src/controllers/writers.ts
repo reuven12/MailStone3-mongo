@@ -5,7 +5,7 @@ import { IWriter } from '../interface/writes.interface';
 
 const router=express.Router();
 
-router.get('/:First_Name', async (req:Request,res:Response)=>{
+router.get('/First_Name/:First_Name', async (req:Request,res:Response)=>{
     try{
         const populatedWriter : IWriter= await WriterModel.findOne({First_Name: req.params.First_Name}).populate('List_books');
         res.send(populatedWriter.List_books);
@@ -31,9 +31,46 @@ router.post('/',async(req:Request,res:Response)=>{
 });
 
 
-router.get('/',async(req:Request,res:Response)=>{
+router.get('/match',async(req:Request,res:Response)=>{
     try{
-        const writesFind:IWriter = await WriterModel.find();
+        const writesFind = await WriterModel.aggregate(
+            [
+                {
+                  '$match': {
+                    'First_Name': {
+                      '$regex': new RegExp('^p.*$'), 
+                      '$options': 'i'
+                    }
+                  }
+                }, {
+                  '$lookup': {
+                    'from': 'books', 
+                    'localField': 'List_books', 
+                    'foreignField': '_id', 
+                    'as': 'books'
+                  }
+                }, {
+                  '$unwind': {
+                    'path': '$books'
+                  }
+                }, {
+                  '$match': {
+                    'books.Number_of_pages': {
+                      '$gte': 40
+                    }, 
+                    'books.Date_of_publication_of_the_book': {
+                      '$gte': 1960, 
+                      '$lt': 2020
+                    }
+                  }
+                }, {
+                  '$project': {
+                    'nameOfBook': '$books.Title', 
+                    'writerName': '$First_Name'
+                  }
+                }
+              ]
+        );
             res.send(writesFind);
     }catch(err){
         res.status(500).json({

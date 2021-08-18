@@ -18,7 +18,8 @@ const router = express_1.default.Router();
 router.get('/Book_description/:Book_description', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const booke = yield books_1.BookModel.find({
-            Book_description: { $regex: req.params.Book_description, $options: 'i' },
+            Title: { $regex: req.params.Title, $options: 'i' }
+        } || { Book_description: { $regex: req.params.Book_description, $options: 'i' },
         });
         res.send(booke);
     }
@@ -29,8 +30,8 @@ router.get('/Book_description/:Book_description', (req, res) => __awaiter(void 0
 router.get('/pages/:Number_of_pages', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const pages = yield books_1.BookModel.find({
-            Number_of_pages: { $gt: req.params.Number_of_pages },
-        }).sort('Number_of_pages');
+            Number_of_pages: { $gt: parseInt(req.params.Number_of_pages) }
+        });
         res.send(pages);
     }
     catch (err) {
